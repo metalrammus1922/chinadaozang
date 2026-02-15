@@ -1,30 +1,63 @@
 <script setup>
-import HelloWorld from './components/HelloWorld.vue'
 </script>
 
 <template>
-  <div>
-    <a href="https://vite.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
-  </div>
-  <HelloWorld msg="Vite + Vue" />
+  <a-layout class="layout">
+    <a-layout-header>
+      <div class="logo" />
+      <a-menu
+        v-model:selectedKeys="selectedKeys"
+        theme="dark"
+        mode="horizontal"
+        :style="{ lineHeight: '64px' }"
+      >
+        <a-menu-item key="1">nav 1</a-menu-item>
+        <a-menu-item key="2">nav 2</a-menu-item>
+        <a-menu-item key="3">nav 3</a-menu-item>
+      </a-menu>
+    </a-layout-header>
+    <a-layout-content style="padding: 0 50px">
+      <a-breadcrumb style="margin: 16px 0">
+        <a-breadcrumb-item>Home</a-breadcrumb-item>
+        <a-breadcrumb-item>List</a-breadcrumb-item>
+        <a-breadcrumb-item>App</a-breadcrumb-item>
+      </a-breadcrumb>
+      <div :style="{ background: '#fff', padding: '24px', minHeight: '280px' }">Content</div>
+    </a-layout-content>
+    <a-layout-footer style="text-align: center">
+      Ant Design ©2018 Created by Ant UED
+    </a-layout-footer>
+  </a-layout>
 </template>
-
+<script setup>
+import { ref } from 'vue';
+const selectedKeys = ref(['2']);
+</script>
 <style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+.layout {
+  min-height: 100vh;
+  width: 100vw;
+  margin: 0 auto;
+  padding: 0;
 }
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+.site-layout-content {
+  min-height: 280px;
+  padding: 24px;
+  background: #fff;
 }
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
+#components-layout-demo-top .logo {
+  float: left;
+  width: 120px;
+  height: 31px;
+  margin: 16px 24px 16px 0;
+  background: rgba(255, 255, 255, 0.3);
+}
+.ant-row-rtl #components-layout-demo-top .logo {
+  float: right;
+  margin: 16px 0 16px 24px;
+}
+
+[data-theme='dark'] .site-layout-content {
+  background: #141414;
 }
 </style>
