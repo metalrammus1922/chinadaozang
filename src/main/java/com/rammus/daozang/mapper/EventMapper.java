@@ -3,6 +3,7 @@ package com.rammus.daozang.mapper;
 import com.rammus.daozang.domain.Event;
 import com.rammus.daozang.domain.EventExample;
 import java.util.List;
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 public interface EventMapper {
