@@ -23,20 +23,88 @@ const mockEvents = [
   { id: 5, year: 1368, name: '明朝建立', location: [118.8, 32.1], type: 'politics', description: '朱元璋建立明朝' }
 ]
 
+// 完整的中国主要城市坐标数据
+const chinaCities = [
+  { name: '北京', value: [116.4, 39.9], pinyin: 'beijing' },
+  { name: '上海', value: [121.47, 31.23], pinyin: 'shanghai' },
+  { name: '广州', value: [113.23, 23.16], pinyin: 'guangzhou' },
+  { name: '深圳', value: [114.07, 22.62], pinyin: 'shenzhen' },
+  { name: '杭州', value: [120.19, 30.26], pinyin: 'hangzhou' },
+  { name: '南京', value: [118.78, 32.04], pinyin: 'nanjing' },
+  { name: '西安', value: [108.95, 34.27], pinyin: 'xian' },
+  { name: '成都', value: [104.06, 30.67], pinyin: 'chengdu' },
+  { name: '武汉', value: [114.31, 30.52], pinyin: 'wuhan' },
+  { name: '重庆', value: [106.54, 29.59], pinyin: 'chongqing' },
+  { name: '天津', value: [117.2, 39.13], pinyin: 'tianjin' },
+  { name: '苏州', value: [120.62, 31.32], pinyin: 'suzhou' },
+  { name: '郑州', value: [113.65, 34.76], pinyin: 'zhengzhou' },
+  { name: '长沙', value: [113, 28.21], pinyin: 'changsha' },
+  { name: '沈阳', value: [123.38, 41.8], pinyin: 'shenyang' },
+  { name: '青岛', value: [120.33, 36.07], pinyin: 'qingdao' },
+  { name: '大连', value: [121.62, 38.92], pinyin: 'dalian' },
+  { name: '厦门', value: [118.1, 24.46], pinyin: 'xiamen' },
+  { name: '昆明', value: [102.73, 25.04], pinyin: 'kunming' },
+  { name: '哈尔滨', value: [126.63, 45.75], pinyin: 'haerbin' }
+]
+
+// 加载真实的中国地图数据
+const loadChinaMap = async () => {
+  try {
+    // 尝试从多个数据源加载中国地图
+    const sources = [
+      'https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json',
+      'https://cdn.jsdelivr.net/npm/echarts@5/map/json/china.json'
+    ]
+    
+    for (const source of sources) {
+      try {
+        const response = await fetch(source)
+        if (response.ok) {
+          const chinaGeoJSON = await response.json()
+          echarts.registerMap('china', chinaGeoJSON)
+          console.log('成功加载中国地图数据:', source)
+          return true
+        }
+      } catch (error) {
+        console.warn('地图数据源加载失败:', source, error)
+      }
+    }
+    
+    // 如果所有数据源都失败，使用内置的简化地图
+    throw new Error('所有地图数据源都加载失败')
+    
+  } catch (error) {
+    console.warn('使用简化中国地图:', error)
+    // 简化版中国地图轮廓
+    const simplifiedChina = {
+      type: 'FeatureCollection',
+      features: [
+        {
+          type: 'Feature',
+          properties: { name: '中国' },
+          geometry: {
+            type: 'Polygon',
+            coordinates: [[
+              [73.66, 18.17], [135.05, 18.17], [135.05, 53.56], [73.66, 53.56], [73.66, 18.17]
+            ]]
+          }
+        }
+      ]
+    }
+    echarts.registerMap('china', simplifiedChina)
+    return false
+  }
+}
+
 // 初始化地图
-const initMap = () => {
+const initMap = async () => {
   const chartDom = document.getElementById('china-map')
   if (!chartDom) return
   
   mapInstance.value = echarts.init(chartDom)
   
-  // 注册中国地图
-  echarts.registerMap('china', {
-    // 这里需要真实的中国地图GeoJSON数据
-    // 实际项目中需要从外部加载
-    type: 'FeatureCollection',
-    features: []
-  })
+  // 加载中国地图数据
+  await loadChinaMap()
   
   updateMap()
 }
@@ -47,71 +115,160 @@ const updateMap = () => {
   
   // 过滤当前年份的事件
   const currentEvents = mockEvents.filter(event => 
-    Math.abs(event.year - currentYear.value) <= 50 // 显示前后50年的事件
+    Math.abs(event.year - currentYear.value) <= 100 // 显示前后100年的事件
   )
   
   const option = {
+    backgroundColor: '#1e1e1e',
     title: {
-      text: `中国历史地图 - 公元${currentYear.value > 0 ? currentYear.value : Math.abs(currentYear.value) + 'BC'}年`,
-      left: 'center'
+      text: `中国历史地图 - ${currentYear.value > 0 ? '公元' + currentYear.value + '年' : '公元前' + Math.abs(currentYear.value) + '年'}`,
+      left: 'center',
+      textStyle: {
+        color: '#fff',
+        fontSize: 20
+      }
     },
     tooltip: {
       trigger: 'item',
+      backgroundColor: 'rgba(0,0,0,0.8)',
+      borderColor: '#555',
+      textStyle: {
+        color: '#fff'
+      },
       formatter: function(params) {
         if (params.componentType === 'series') {
-          return `${params.data.name}<br/>${params.data.description}`
+          if (params.seriesType === 'scatter') {
+            return `<div style="padding: 5px;">
+              <strong style="color: #ffd700;">${params.data.name}</strong><br/>
+              ${params.data.description}<br/>
+              <span style="color: #ccc;">坐标: ${params.data.value[0]}, ${params.data.value[1]}</span>
+            </div>`
+          }
         }
         return params.name
       }
     },
     legend: {
       orient: 'vertical',
-      right: 10,
+      right: 20,
       top: 'center',
-      data: ['战争事件', '政治事件', '城池', '人口密度']
+      textStyle: {
+        color: '#fff'
+      },
+      data: ['战争事件', '政治事件', '主要城市']
     },
-    visualMap: {
-      type: 'piecewise',
-      orient: 'horizontal',
-      left: 'center',
-      bottom: 10,
-      pieces: [
-        {min: 1000000, label: '高密度', color: '#ff4d4f'},
-        {min: 500000, max: 1000000, label: '中密度', color: '#ff7a45'},
-        {min: 100000, max: 500000, label: '低密度', color: '#ffa940'},
-        {max: 100000, label: '稀疏', color: '#ffd666'}
-      ]
+    geo: {
+      map: 'china',
+      roam: true,
+      zoom: 1,
+      center: [104.0, 36.0],
+      label: {
+        show: true,
+        color: '#fff',
+        fontSize: 10
+      },
+      itemStyle: {
+        areaColor: '#2f3640',
+        borderColor: '#57606f',
+        borderWidth: 0.5
+      },
+      emphasis: {
+        label: {
+          show: true,
+          color: '#fff'
+        },
+        itemStyle: {
+          areaColor: '#4a5568'
+        }
+      },
+      select: {
+        label: {
+          show: true,
+          color: '#fff'
+        },
+        itemStyle: {
+          areaColor: '#4a5568'
+        }
+      }
     },
     series: [
       {
-        name: '中国地图',
-        type: 'map',
-        map: 'china',
-        roam: true,
+        name: '主要城市',
+        type: 'effectScatter',
+        coordinateSystem: 'geo',
+        data: chinaCities,
+        symbolSize: function(val) {
+          return val[2] / 1000;
+        },
+        showEffectOn: 'render',
+        rippleEffect: {
+          brushType: 'stroke'
+        },
+        hoverAnimation: true,
+        label: {
+          formatter: '{b}',
+          position: 'right',
+          show: true
+        },
+        itemStyle: {
+          color: '#46bee9',
+          shadowBlur: 10,
+          shadowColor: '#333'
+        },
+        zlevel: 1
+      },
+      {
+        name: '战争事件',
+        type: 'scatter',
+        coordinateSystem: 'geo',
+        data: currentEvents.filter(e => e.type === 'war').map(event => ({
+          name: event.name,
+          value: event.location,
+          description: event.description,
+          symbolSize: 15
+        })),
+        symbol: 'pin',
+        symbolSize: 30,
+        label: {
+          show: true,
+          formatter: '{b}',
+          color: '#fff',
+          backgroundColor: 'rgba(255,0,0,0.7)',
+          padding: [2, 4],
+          borderRadius: 2
+        },
+        itemStyle: {
+          color: '#ff4d4f'
+        },
         emphasis: {
           label: {
             show: true
           }
-        },
-        itemStyle: {
-          areaColor: '#f0f2f5',
-          borderColor: '#d9d9d9'
         }
       },
       {
-        name: '历史事件',
+        name: '政治事件',
         type: 'scatter',
         coordinateSystem: 'geo',
-        data: currentEvents.map(event => ({
+        data: currentEvents.filter(e => e.type === 'politics').map(event => ({
           name: event.name,
           value: event.location,
           description: event.description,
-          symbolSize: event.type === 'war' ? 20 : 15,
-          itemStyle: {
-            color: event.type === 'war' ? '#ff4d4f' : '#1890ff'
-          }
+          symbolSize: 12
         })),
-        symbol: 'circle'
+        symbol: 'circle',
+        symbolSize: 25,
+        label: {
+          show: true,
+          formatter: '{b}',
+          color: '#fff',
+          backgroundColor: 'rgba(24,144,255,0.7)',
+          padding: [2, 4],
+          borderRadius: 2
+        },
+        itemStyle: {
+          color: '#1890ff'
+        }
       }
     ]
   }
