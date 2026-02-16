@@ -8,3 +8,14 @@
 # 环境
 nvm install 22.18.0
 open jdk 17
+# 表设计
+-- daozang.event definition
+
+CREATE TABLE `event` (
+  `EventID` varchar(100) DEFAULT NULL,
+  `RowID` varchar(100) DEFAULT NULL,
+  `EventName` varchar(500) DEFAULT NULL,
+  `EventContent` varchar(100) DEFAULT NULL,
+  `EventType` varchar(100) DEFAULT NULL,
+  `EventLocation` varchar(100) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
